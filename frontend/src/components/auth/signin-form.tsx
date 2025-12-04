@@ -56,11 +56,11 @@ const onSubmit = async (data: SignInFormValues) => {
                 {/*todo: add validation message*/}
                 {errors.password && (<p className="text-destructive text-sm">{errors.password.message}</p>)}
               </div>
-            {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled= {isSubmitting}>Create Account</Button>
+            {/* Login Button */}
+            <Button type="submit" className="w-full" disabled= {isSubmitting}>Login</Button>
             <div className="text-center text-sm">
-              Already have an account? {""}
-              <a href="/signin" className="underline underline-offset-4 text-blue-900">Sign In</a>
+              Don't have an account? {""}
+              <a href="/signup" className="underline underline-offset-4 text-blue-900">Sign Up</a>
             </div>
           </div>
           </form>

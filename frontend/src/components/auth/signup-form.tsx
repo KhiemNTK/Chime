@@ -86,7 +86,7 @@ const onSubmit = async (data: SignUpFormValues) => {
             <Button type="submit" className="w-full" disabled= {isSubmitting}>Create an account</Button>
             <div className="text-center text-sm">
               Already have an account? {""}
-              <a href="/signup" className="underline underline-offset-4 text-blue-900">Sign in</a>
+              <a href="/signin" className="underline underline-offset-4 text-blue-900">Sign in</a>
             </div>
           </div>
           </form>
