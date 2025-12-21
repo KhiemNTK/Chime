@@ -32,21 +32,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       //call API to sign up
       const { accessToken } = await authService.signIn(username, password);
       set({ accessToken });
+      await get().fetchMe();// get user info and set in store
+
       toast.success("Signed in successfully!");
     } catch (error) {
       console.error(error);
       toast.error("Error signing in");
+    } finally {
+      set({ loading: false });
     }
   },
 
   signOut: async () => {
     try {
-        get().clearState();
-        await authService.signOut();
-        toast.success("Signed out successfully!");
+      get().clearState();
+      await authService.signOut();
+      toast.success("Signed out successfully!");
     } catch (error) {
       console.error(error);
       toast.error("Error signing out! Try again.");
+    }
+  },
+
+  fetchMe: async () => {
+    try {
+      set({ loading: true });
+      const user = await authService.fetchMe();
+
+      set({ user });
+    } catch (error) {
+      console.error(error);
+      set({ user: null, accessToken: null });
+      toast.error("Session expired! Please sign in again.");
+    } finally {
+      set({ loading: false });
     }
   },
 }));

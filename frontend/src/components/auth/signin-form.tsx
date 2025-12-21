@@ -99,7 +99,7 @@ export function SignInForm({
                   href="/signup"
                   className="underline underline-offset-4 text-blue-900"
                 >
-                  Sign Up
+                  Sign up
                 </a>
               </div>
             </div>

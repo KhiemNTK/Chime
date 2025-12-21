@@ -33,5 +33,14 @@ export const authService = {
   //signout method
   signOut: async () => {
     return api.post("/auth/signout", { withCredentials: true });
-  }
+  },
+
+  //user info method
+  fetchMe: async () => {
+    const res = await api.get(
+      "/users/me",
+      { withCredentials: true }
+    );
+    return res.data.user;
+  },
 };
