@@ -1,6 +1,5 @@
 import { useAuthStore } from "@/stores/useAuthStore";
 import axios from "axios";
-import { use } from "react";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL, // Set base URL based on environment
@@ -22,20 +21,16 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     //api does not need to check
-    if (
-      originalRequest.url.includes("/auth/refresh") ||
-      originalRequest.url.includes("/auth/signin") ||
-      originalRequest.url.includes("/auth/signup")
-    ) {
+    const authPaths = ["/auth/signin", "/auth/signup", "/auth/refresh"];
+    if (authPaths.some((path) => originalRequest.url.includes(path))) {
       return Promise.reject(error);
     }
 
     originalRequest._retryCount = originalRequest._retryCount || 0;
-    if (error.response?.status === 403 && originalRequest._retryCount < 4) {
+    if (error.response?.status === 403 && originalRequest._retryCount < 1) {
       originalRequest._retryCount += 1; //limit retries to 4 times
-
       try {
-        const res = await api.post("/auth/refresh", { withCredentials: true });
+        const res = await api.post('/auth/refresh', { withCredentials: true });
         const newAccessToken = res.data.accessToken;
 
         useAuthStore.getState().setAccessToken(newAccessToken);

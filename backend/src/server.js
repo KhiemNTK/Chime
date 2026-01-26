@@ -6,28 +6,28 @@ import cookieParser from 'cookie-parser';
 import userRoute from './routes/userRoute.js';
 import { protectedRoute } from './middlewares/authMiddleware.js';
 import cors from 'cors';
+//import { commonLimiter } from './middlewares/rateLimiter.js';
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
 //middlewares
+//app.set('trust proxy', 1); // trust first proxy
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: process.env.CLIENT_URL, credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']}));
 
 //public routes
-app.use('/api/auth', authRoute)
-
+app.use('/api/auth', authRoute);
 
 //private routes
-app.use(protectedRoute)
-app.use('/api/users', userRoute)
-
+app.use(protectedRoute);
+app.use('/api/users', userRoute);
 
 connectDB().then(() => {
-    app.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-})
+  });
 });
-

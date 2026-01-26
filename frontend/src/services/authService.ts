@@ -32,7 +32,7 @@ export const authService = {
 
   //signout method
   signOut: async () => {
-    return api.post("/auth/signout", { withCredentials: true });
+    return api.post("/auth/signout", {withCredentials: true });
   },
 
   //user info method
@@ -46,7 +46,7 @@ export const authService = {
 
   //refresh token method
   refresh: async () => {
-    const res = await api.post("/auth/refresh", { withCredentials: true });
+    const res = await api.post("/auth/refresh", {withCredentials: true });
     return res.data.accessToken;
   }
 };

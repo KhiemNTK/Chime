@@ -115,7 +115,7 @@ export const refreshToken = async (req, res) => {
     //compare session from db
     const session = await Session.findOne({ refreshToken: token });
     if (!session) {
-      return res.status(401).json({ message: 'Invalid refresh token' });
+      return res.status(403).json({ message: 'Invalid refresh token' });
     }
     //check if refreshToken is expired
     if (session.expiresAt < new Date()) {

@@ -1,42 +1,51 @@
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, Outlet } from 'react-router';
-import { useState } from 'react';
 
 const ProtectedRoute = () => {
   const { accessToken, fetchMe, user, loading, refresh } = useAuthStore();
-  const [ starting, setStarting ] = useState(true);
+  const [starting, setStarting] = useState(true);
+  const isInitialized = useRef(false); // Ref để theo dõi trạng thái init
   
   const init = async () => {
-    //occurs on first load of protected route
-    if (!accessToken) {
-      await refresh();
+    // if already initialized, return
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+    try {
+      //occurs on first load of protected route
+      if (!accessToken) {
+        await refresh();
+      }
+      
+      const currentToken = useAuthStore.getState().accessToken; 
+      if (currentToken && !user) {
+        await fetchMe();
+      }
+    } catch (error) {
+      console.error("Auth init failed", error);
+    } finally {
+      setStarting(false);
     }
+  };
 
-    if (accessToken && !user) {
-      await fetchMe();
-    }
-    setStarting(false);
-  }
-
-    useEffect(() => {
-      init();
-    }, []);
+  useEffect(() => {
+    init();
+  }, []);
   
   if (starting || loading) {
-    return <div className="flex h-screen items-center justify-center">Loading ... </div>
+    return (<div className="flex h-screen items-center justify-center">Loading ... </div>);
   }
 
 
   if (!accessToken) {
-      return (
-        <Navigate to="/signin" replace />
-      )
-    }
+    return (
+      <Navigate to="/signin" replace />
+    )
+  }
 
   return (
     <Outlet></Outlet> // render child routes
   )
-}
+};
 
 export default ProtectedRoute

@@ -35,7 +35,11 @@ export function SignInForm({
     const { username, password } = data;
     // Call signIn for signin
     await signIn(username, password);
-    navigate("/");
+    const currentUser = useAuthStore.getState().user; 
+    
+    if (currentUser) {
+       navigate("/");
+    }
   };
 
   return (
