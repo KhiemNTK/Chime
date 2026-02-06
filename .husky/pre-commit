@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+echo "🔎 Type checking..."
+npm run type-check
+if [ $? -ne 0 ]; then
+  echo "❌ Type errors found. Commit aborted."
+  exit 1
+fi
+
+echo "✅ Type check passed. Running lint-staged..."
+
+npx lint-staged

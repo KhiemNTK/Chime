@@ -1,0 +1,15 @@
+{
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "husky": "^8.0.0"
+  },
+  "scripts": {
+    "prepare": "husky install",
+    "type-check": "npm run --prefix frontend type-check"
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{ts,tsx}": "eslint --fix --project frontend/tsconfig.json",
+    "backend/src/**/*.ts": "prettier --write"
+  }
+}
