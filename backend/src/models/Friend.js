@@ -17,6 +17,7 @@ const friendSchema = new Schema({
     userA: requiredUserRef,
     userB: requiredUserRef,
     requester: requiredUserRef,
+    blockedBy: userRef,
     status: {
         type: String,
         enum: ['pending', 'accepted', 'blocked'],
