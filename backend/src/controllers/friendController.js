@@ -1,11 +1,7 @@
 import FriendRequest from "../models/FriendRequest.js";
 import Friend from "../models/Friend.js";
 import User from "../models/User.js";
-
-// Utility to sort user IDs
-const getSortedIds = (id1, id2) => {
-    return id1 > id2 ? { userA: id2, userB: id1 } : { userA: id1, userB: id2 };
-};
+import { getSortedIds } from "../utils/index.js";
 
 export const sendFriendRequest = async (req, res) => {
     try {
