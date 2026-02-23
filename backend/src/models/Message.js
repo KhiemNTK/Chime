@@ -29,7 +29,7 @@ const messageSchema = new Schema({
 });
 
 // Compound index for efficient message pagination within a conversation
-messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index({ conversationId: 1, _id: -1 });
 
 const Message = mongoose.model('Message', messageSchema);
 export default Message;
