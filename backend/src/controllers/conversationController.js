@@ -19,7 +19,7 @@ export const createConversation = async (req, res) => {
         }
 
         // Delete duplicate IDs and remove the user's own ID
-        const validMemberIds = [...new Set(memberIds)].filter(id => id.toString() !== userId.toString());
+        const validMemberIds = [...new Set(memberIds.map(id => id.toString()))].filter(id => id !== userId.toString());
 
         let conversation;
 
@@ -87,6 +87,51 @@ export const createConversation = async (req, res) => {
 }
 
 export const getConversations = async (req, res) => {
+
+    try {
+        const userId = req.user._id;
+        const conversations = await Conversation.find({
+            "participants.userId": userId
+        })
+            .sort({ lastMessageAt: -1, updatedAt: -1 })
+            .populate([
+                {
+                    path: "participants.userId",
+                    select: "displayName avatarUrl"
+                },
+                {
+                    path: "lastMessage.senderId",
+                    select: "displayName avatarUrl"
+                },
+                {
+                    path: "seenBy",
+                    select: "displayName avatarUrl"
+                }
+            ])
+            .lean();
+
+        //Formatted conversations for frontend
+        const formatted = conversations.map((convo) => {
+            const participants = (convo.participants || []).map((p) => ({
+                _id: p.userId?._id,
+                displayName: p.userId?.displayName ?? null,
+                avatarUrl: p.userId?.avatarUrl,
+                joinedAt: p.joinedAt
+            }));
+
+            return {
+                ...convo, // No need for toObject() since lean() is used
+                unreadCounts: convo.unreadCounts || null,
+                participants
+            }
+        });
+
+        return res.status(200).json({ conversations: formatted });
+    } catch (error) {
+
+        console.error("Error getting conversations", error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 }
 
 export const getMessages = async (req, res) => {
