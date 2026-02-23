@@ -17,7 +17,7 @@ export const sendFriendRequest = async (req, res) => {
             return res.status(400).json({ message: "User does not exist" })
         }
 
-        const { userA, userB } = getSortedIds(from, to);
+        const [userA, userB] = getSortedIds(from, to);
 
         const [alreadyFriends, existingRequest] = await Promise.all([
             Friend.findOne({
@@ -71,7 +71,7 @@ export const acceptFriendRequest = async (req, res) => {
             return res.status(403).json({ message: "You are not authorized to accept this request" });
         }
 
-        const { userA, userB } = getSortedIds(request.from.toString(), userId);
+        const [userA, userB] = getSortedIds(request.from.toString(), userId);
 
         // Check if already exist
         const existingFriend = await Friend.findOne({ userA, userB });
@@ -199,7 +199,7 @@ export const removeFriend = async (req, res) => {
         const { id: otherUserId } = req.params;
         const userId = req.user._id.toString();
 
-        const { userA, userB } = getSortedIds(userId, otherUserId);
+        const [userA, userB] = getSortedIds(userId, otherUserId);
 
         const result = await Friend.findOneAndDelete({
             userA,
@@ -228,7 +228,7 @@ export const blockUser = async (req, res) => {
             return res.status(400).json({ message: "Cannot block yourself" });
         }
 
-        const { userA, userB } = getSortedIds(userId, blockUserId);
+        const [userA, userB] = getSortedIds(userId, blockUserId);
 
         const existingRelationship = await Friend.findOne({ userA, userB });
 
@@ -268,7 +268,7 @@ export const unblockUser = async (req, res) => {
         const { id: unblockUserId } = req.params;
         const userId = req.user._id.toString();
 
-        const { userA, userB } = getSortedIds(userId, unblockUserId);
+        const [userA, userB] = getSortedIds(userId, unblockUserId);
 
         if (userId === unblockUserId) {
             return res.status(400).json({ message: "You cannot unblock yourself" });
