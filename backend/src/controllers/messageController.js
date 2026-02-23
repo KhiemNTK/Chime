@@ -4,6 +4,7 @@ import { updateConversationAfterCreateMessage } from "../utils/index.js";
 import mongoose from "mongoose";
 
 export const sendDirectMessage = async (req, res) => {
+
     const { recipientId, content, conversationId } = req.body;
     const senderId = req.user._id;
 
