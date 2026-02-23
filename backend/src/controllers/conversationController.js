@@ -1,5 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
+import mongoose from 'mongoose';
 
 export const createConversation = async (req, res) => {
     try {
@@ -135,4 +136,56 @@ export const getConversations = async (req, res) => {
 }
 
 export const getMessages = async (req, res) => {
+    try {
+        const { conversationId } = req.params;
+        const { limit = 50, cursor } = req.query;
+        const userId = req.user._id;
+
+        if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+            return res.status(400).json({ message: 'Invalid conversation ID format' });
+        }
+
+        const parsedLimit = Math.min(parseInt(limit, 10) || 50, 100);
+
+        const isParticipant = await Conversation.exists({
+            _id: conversationId,
+            "participants.userId": userId
+        });
+
+        if (!isParticipant) {
+            return res.status(403).json({ message: 'Access denied: You are not a participant' });
+        }
+
+        const query = { conversationId };
+
+        if (cursor) {
+            if (!mongoose.Types.ObjectId.isValid(cursor)) {
+                return res.status(400).json({ message: 'Invalid cursor format' });
+            }
+            query._id = { $lt: cursor };
+        }
+
+        let messages = await Message.find(query)
+            .sort({ _id: -1 })
+            .limit(parsedLimit + 1)
+            .populate('senderId', 'displayName avatarUrl')
+            .lean();
+
+        let nextCursor = null;
+
+        if (messages.length > parsedLimit) {
+            messages.pop();
+            const lastMessage = messages[messages.length - 1];
+            nextCursor = lastMessage._id;
+        }
+
+        messages = messages.reverse();
+
+        return res.status(200).json({ messages, nextCursor });
+
+    } catch (error) {
+        
+        console.error("Error getting messages:", error);
+        return res.status(500).json({ message: 'Internal server error' });
+    }
 }
