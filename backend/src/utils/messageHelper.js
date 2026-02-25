@@ -1,9 +1,12 @@
+import Message from "../models/Message.js";
+import Conversation from "../models/Conversation.js";
+
 export const updateConversationAfterCreateMessage = (message, senderId, participantIds) => {
     const update = {
         $set: {
             lastMessageAt: message.createdAt,
             lastMessage: {
-                id: message._id,
+                _id: message._id,
                 content: message.content,
                 senderId,
                 createdAt: message.createdAt
@@ -31,3 +34,20 @@ export const updateConversationAfterCreateMessage = (message, senderId, particip
 
 // Utility to sort user IDs
 export const getSortedIds = (id1, id2) => (id1 > id2 ? [id2, id1] : [id1, id2]);
+
+// Utility to process message creation
+export const processMessageCreation = async (conversation, senderId, content, session) => {
+
+    const [message] = await Message.create([{
+        conversationId: conversation._id,
+        senderId,
+        content,
+    }], { session });
+
+    const participantIds = conversation.participants.map(p => p.userId);
+    const updateData = updateConversationAfterCreateMessage(message, senderId, participantIds);
+
+    await Conversation.updateOne({ _id: conversation._id }, updateData, { session });
+
+    return message;
+};

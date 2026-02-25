@@ -61,3 +61,33 @@ export const checkFriendship = async (req, res, next) => {
     }
 }
 
+export const checkGroupMembership = async (req, res, next) => {
+    try {
+
+        const { conversationId } = req.body;
+        const senderId = req.user._id;
+
+        if (!conversationId) {
+            return res.status(400).json({ message: "Conversation ID is required" });
+        }
+
+        const conversation = await Conversation.findOne({
+            _id: conversationId,
+            "participants.userId": senderId
+        });
+
+        if (!conversation) {
+            return res.status(404).json({ message: "Conversation not found or you are not a member" });
+        }
+
+        req.conversation = conversation;
+
+        next();
+
+    } catch (error) {
+
+        console.error("Error while checking group membership", error)
+        return res.status(500).json({ message: "Internal server error" })
+    }
+
+}

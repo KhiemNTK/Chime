@@ -1,6 +1,5 @@
-import Message from "../models/Message.js";
 import Conversation from "../models/Conversation.js";
-import { updateConversationAfterCreateMessage } from "../utils/index.js";
+import { processMessageCreation } from "../utils/index.js";
 import mongoose from "mongoose";
 
 export const sendDirectMessage = async (req, res) => {
@@ -10,6 +9,10 @@ export const sendDirectMessage = async (req, res) => {
 
     if (!content?.trim()) {
         return res.status(400).json({ message: 'Content is required' });
+    }
+
+    if (content.length > 2000) {
+        return res.status(400).json({ message: 'Message is too long' });
     }
 
     if (!conversationId && !recipientId) {
@@ -60,16 +63,7 @@ export const sendDirectMessage = async (req, res) => {
             return res.status(404).json({ message: 'Conversation not found or you are not a participant' });
         }
 
-        const [message] = await Message.create([{
-            conversationId: conversation._id,
-            senderId,
-            content,
-        }], { session });
-
-        const participantIds = conversation.participants.map(p => p.userId);
-        const updateData = updateConversationAfterCreateMessage(message, senderId, participantIds);
-
-        await Conversation.updateOne({ _id: conversation._id }, updateData, { session });
+        const message = await processMessageCreation(conversation, senderId, content, session);
 
         await session.commitTransaction();
         return res.status(201).json({ message });
@@ -91,10 +85,54 @@ export const sendDirectMessage = async (req, res) => {
 }
 
 export const sendGroupMessage = async (req, res) => {
+
+    const { conversationId, content } = req.body;
+    const senderId = req.user._id;
+
+    if (!content?.trim()) {
+        return res.status(400).json({ message: 'Content is required' });
+    }
+
+    if (content.length > 2000) {
+        return res.status(400).json({ message: 'Message is too long' });
+    }
+
+    if (!conversationId) {
+        return res.status(400).json({ message: 'Conversation ID is required' });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
 
+        const conversation = await Conversation.findOne({
+            _id: conversationId,
+            "participants.userId": senderId
+        }).session(session);
+
+        if (!conversation) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: 'Conversation not found or you are not a participant' });
+        }
+
+        const message = await processMessageCreation(conversation, senderId, content, session);
+
+        await session.commitTransaction();
+        return res.status(201).json({ message });
+
     } catch (error) {
+
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+
         console.error("Error sending group message", error);
         return res.status(500).json({ message: 'Internal server error' });
+
+    } finally {
+
+        session.endSession();
+
     }
 }
