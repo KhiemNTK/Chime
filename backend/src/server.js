@@ -9,6 +9,8 @@ import messageRoute from './routes/messageRoute.js';
 import conversationRoute from './routes/conversationRoute.js';
 import { protectedRoute } from './middlewares/authMiddleware.js';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express'
+import fs from 'fs'
 //import { commonLimiter } from './middlewares/rateLimiter.js';
 dotenv.config();
 
@@ -19,9 +21,15 @@ const PORT = process.env.PORT || 5001;
 //app.set('trust proxy', 1); // trust first proxy
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']}));
+app.use(cors({
+  origin: process.env.CLIENT_URL, credentials: true, methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
+
+//Swagger
+const swaggerDocument = JSON.parse(fs.readFileSync("./src/swagger.json", "utf8"));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 //public routes
 app.use('/api/auth', authRoute);
 
