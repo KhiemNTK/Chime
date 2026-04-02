@@ -12,7 +12,6 @@ export const useChatStore = create<ChatState>()(
       activeConversationId: null,
       convoLoading: false,
       messageLoading: false,
-      loading: false,
 
       setActiveConversation: (id) => set({ activeConversationId: id }),
       reset: () => {
@@ -36,7 +35,7 @@ export const useChatStore = create<ChatState>()(
           set({ convoLoading: false });
         }
       },
-      
+
       fetchMessages: async (conversationId) => {
         const { activeConversationId, messages } = get();
         const { user } = useAuthStore.getState();
@@ -80,9 +79,78 @@ export const useChatStore = create<ChatState>()(
             };
           });
         } catch (error) {
-          console.error("Lỗi xảy ra khi fetchMessages:", error);
+          console.error("Error when calling fetchMessages in store", error);
         } finally {
           set({ messageLoading: false });
+        }
+      },
+      markAsSeen: async () => {
+        try {
+          const { user } = useAuthStore.getState();
+          const { activeConversationId, conversations } = get();
+
+          if (!activeConversationId || !user) {
+            return;
+          }
+
+          const convo = conversations.find((c) => c._id === activeConversationId);
+
+          if (!convo) {
+            return;
+          }
+
+          if ((convo.unreadCounts?.[user._id] ?? 0) === 0) {
+            return;
+          }
+
+          await chatService.markAsSeen(activeConversationId);
+
+          set((state) => ({
+            conversations: state.conversations.map((c) =>
+              c._id === activeConversationId && c.lastMessage
+                ? {
+                  ...c,
+                  unreadCounts: {
+                    ...c.unreadCounts,
+                    [user._id]: 0,
+                  },
+                }
+                : c
+            ),
+          }));
+        } catch (error) {
+          console.error("Error when calling markAsSeen in store", error);
+        }
+      },
+
+      sendDirectMessage: async (recipientId, content, imgUrl) => {
+        try {
+          const { activeConversationId } = get();
+          await chatService.sendDirectMessage(
+            recipientId,
+            content,
+            imgUrl,
+            activeConversationId || undefined
+          );
+          set((state) => ({
+            conversations: state.conversations.map((c) =>
+              c._id === activeConversationId ? { ...c, seenBy: [] } : c
+            ),
+          }));
+        } catch (error) {
+          console.error("Error when calling sendDirectMessage in store", error);
+        }
+      },
+      sendGroupMessage: async (conversationId, content, imgUrl) => {
+        try {
+          await chatService.sendGroupMessage(conversationId, content, imgUrl);
+          set((state) => ({
+            conversations: state.conversations.map((c) =>
+              c._id === get().activeConversationId ? { ...c, seenBy: [] } : c
+            ),
+          }));
+        } catch (error) {
+          console.error("Error when calling sendGroupMessage in store", error);
         }
       },
     }),
@@ -90,7 +158,6 @@ export const useChatStore = create<ChatState>()(
       name: "chat-storage",
       partialize: (state) => ({
         conversations: state.conversations,
-        messages: state.messages,
       }),
     },
   ),

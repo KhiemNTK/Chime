@@ -15,7 +15,6 @@ const DirectMessageCard = ({ convo }: { convo: Conversation }) => {
     messages,
     fetchMessages,
   } = useChatStore();
-  //const { onlineUsers } = useSocketStore();
 
   if (!user) return null;
 
