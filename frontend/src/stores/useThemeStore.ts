@@ -28,6 +28,13 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: "theme-storage",
+      onRehydrateStorage: () => (state) => {
+        if (state?.isDark) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      },
     },
   ),
 );
