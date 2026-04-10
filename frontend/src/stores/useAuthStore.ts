@@ -4,6 +4,7 @@ import { authService } from "@/services/authService";
 import type { AuthState } from "@/types/store";
 import { persist } from "zustand/middleware";
 import { useChatStore } from "./useChatStore";
+import { useThemeStore } from "./useThemeStore";
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -63,6 +64,7 @@ export const useAuthStore = create<AuthState>()(
 
       signOut: async () => {
         try {
+          useThemeStore.getState().setTheme(false);
           get().clearState();
           await authService.signOut();
           toast.success("Signed out successfully!");

@@ -29,12 +29,12 @@ const ChatWindowBody = () => {
     return seenBy.length > 0 ? "seen" : "delivered";
   }, [selectedConvo]);
 
-  // scroll to bottom when load convo
+  // scroll to bottom when load convo or new message is added
   useLayoutEffect(() => {
     if (!messagesEndRef.current) return;
 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [activeConversationId]);
+  }, [activeConversationId, messages.length]);
 
   const fetchMoreMessages = async () => {
     if (!activeConversationId) {
