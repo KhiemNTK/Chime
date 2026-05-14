@@ -33,9 +33,9 @@ export const useChatStore = create<ChatState>()(
           const { conversations } = await chatService.fetchConversations();
           const deduped = deduplicateDirectConversations(conversations);
 
-          set({ 
-            conversations: deduped.filter(filterValidConversations), 
-            convoLoading: false 
+          set({
+            conversations: deduped.filter(filterValidConversations),
+            convoLoading: false
           });
         } catch (error) {
           console.error("Failed to fetch conversations", error);
@@ -51,10 +51,10 @@ export const useChatStore = create<ChatState>()(
         if (!convoId) return;
 
         const current = messages[convoId];
-        
+
         // null cursor means no more pages
         if (current?.nextCursor === null) return;
-        
+
         const nextCursor = current?.nextCursor || "";
 
         set({ messageLoading: true });
@@ -70,7 +70,7 @@ export const useChatStore = create<ChatState>()(
 
           set((state) => {
             const prev = state.messages[convoId]?.items ?? [];
-            
+
             // Deduplicate to prevent double-appending in React Strict Mode
             const newMessages = processed.filter(
               (p) => !prev.some((pr) => pr._id === p._id)
@@ -107,7 +107,7 @@ export const useChatStore = create<ChatState>()(
           const convo = conversations.find(
             (c) => c._id === activeConversationId
           );
-          
+
           if (!convo || (convo.unreadCounts?.[user._id] ?? 0) === 0) return;
 
           await chatService.markAsSeen(activeConversationId);
@@ -164,6 +164,65 @@ export const useChatStore = create<ChatState>()(
           console.error("Error when calling sendGroupMessage in store", error);
         }
       },
+
+      addMessage: async (message) => {
+        try {
+          const { user } = useAuthStore.getState();
+          const { fetchMessages } = get();
+
+          message.isOwn = message.senderId === user?._id;
+          const convoId = message.conversationId;
+
+          // if its the first message
+          let prevItems = get().messages[convoId]?.items ?? [];
+          if (prevItems.length === 0) {
+            await fetchMessages(message.conversationId);
+            prevItems = get().messages[convoId]?.items ?? [];
+          }
+
+          set((state) => {
+            const currentItems = state.messages[convoId]?.items ?? [];
+            if (currentItems.some((m) => m._id === message._id)) {
+              return state;
+            }
+            return {
+              messages: {
+                ...state.messages,
+                [convoId]: {
+                  items: [...currentItems, message],
+                  hasMore: state.messages[convoId]?.hasMore ?? false,
+                  nextCursor: state.messages[convoId]?.nextCursor ?? undefined,
+                }
+              }
+            }
+          })
+
+        } catch (error) {
+          console.error("Error when adding message", error);
+        }
+
+      },
+
+      updateConversation: (conversation) => {
+        set((state) => ({
+          conversations: state.conversations.map((c) => c._id === conversation._id ? { ...c, ...conversation } : c)
+        }));
+      },
+
+      addConvo: (convo) => {
+        set((state) => {
+          const exists = state.conversations.some(
+            (c) => c._id === convo._id
+          );
+
+          return {
+            conversations: exists
+              ? state.conversations
+              : [convo, ...state.conversations],
+            activeConversationId: convo._id,
+          };
+        });
+      }
     }),
     {
       name: "chat-storage",

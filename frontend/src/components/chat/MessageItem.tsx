@@ -54,7 +54,7 @@ const MessageItem = ({
             {isGroupBreak && (
               <UserAvatar
                 type="chat"
-                name={participant?.displayName ?? "Moji"}
+                name={participant?.displayName ?? "Chime"}
                 avatarUrl={participant?.avatarUrl ?? undefined}
               />
             )}
@@ -74,7 +74,7 @@ const MessageItem = ({
               message.isOwn ? "chat-bubble-sent border-0" : "chat-bubble-received"
             )}
           >
-            <p className="text-sm leading-relaxed break-words">{message.content}</p>
+            <p className="text-sm leading-relaxed wrap-break-words">{message.content}</p>
           </Card>
 
           {/* seen/ delivered */}

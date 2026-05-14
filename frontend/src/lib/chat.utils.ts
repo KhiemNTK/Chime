@@ -36,11 +36,17 @@ export const appendMessage = (
   message: Message
 ): ChatState["messages"] => {
   const current = messagesState[convoId];
+  const items = current?.items ?? [];
+  
+  if (items.some((m) => m._id === message._id)) {
+    return messagesState;
+  }
+
   return {
     ...messagesState,
     [convoId]: {
       ...current,
-      items: [...(current?.items ?? []), message],
+      items: [...items, message],
       hasMore: current?.hasMore ?? false,
       nextCursor: current?.nextCursor ?? null,
     },
