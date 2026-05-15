@@ -1,6 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import * as authService from '../services/auth.service.js';
 import { signUpSchema, signInSchema } from '../validations/auth.validation.js';
+import { getCookieOptions } from '../utils/index.js';
 
 export const signUp = asyncHandler(async (req, res) => {
   const validatedData = signUpSchema.parse(req.body);
@@ -19,9 +20,7 @@ export const signIn = asyncHandler(async (req, res) => {
   );
 
   res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    ...getCookieOptions(),
     maxAge: REFRESH_TOKEN_TTL,
   });
 
@@ -35,7 +34,7 @@ export const signOut = asyncHandler(async (req, res) => {
   const token = req.cookies?.refreshToken;
   await authService.signOutService(token);
 
-  res.clearCookie('refreshToken');
+  res.clearCookie('refreshToken', getCookieOptions());
   res.sendStatus(204);
 });
 
