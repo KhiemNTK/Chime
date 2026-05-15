@@ -12,7 +12,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 import { app, server } from './socket/index.js';
-
+import { globalErrorHandler } from './middlewares/errorHandler.js';
 dotenv.config();
 
 //const app = express();
@@ -43,6 +43,10 @@ app.use('/api/friends', friendRoute);
 app.use('/api/messages', messageRoute);
 app.use('/api/conversations', conversationRoute);
 
+//Middleware Error Handler
+app.use(globalErrorHandler);
+
+// Database connection
 connectDB().then(() => {
   server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
